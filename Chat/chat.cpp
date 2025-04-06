@@ -65,7 +65,7 @@ void Chat::Connect(const std::string& secretKey) {
 		communicator = new ChatCommunicator(std::move(ConnectionSocket()), true);
 	}
 
-	   bool isVerify = Verify(isHost, secretKey, *communicator, sha256);
+	   bool isVerify = LamportAuthentication(isHost, secretKey, *communicator, sha256);
 
 	   if (isVerify) {
 	   	std::cout << "Verify\n";

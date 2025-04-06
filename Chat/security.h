@@ -4,7 +4,7 @@
 #include <sstream>
 
 template<typename HashFunc>
-bool Verify(bool isHost, const std::string& secretKey, const ICommunicator& communicator, HashFunc hash) {
+bool LamportAuthentication(bool isHost, const std::string& secretKey, const ICommunicator& communicator, HashFunc hash) {
 	if (isHost) {
 		std::string secret = hash(secretKey);
 		for (int i = 1; i != T; ++i)
@@ -46,11 +46,3 @@ bool Verify(bool isHost, const std::string& secretKey, const ICommunicator& comm
 }
 
 std::string sha256(const std::string& input);
-
-template<typename T>
-class SHA256 {
-public:
-	std::string operator() (T input) const {
-		return sha256(std::to_string(input));
-	}
-};
