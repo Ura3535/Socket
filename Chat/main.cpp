@@ -3,7 +3,6 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <fstream>
-//#include <iostream>
 #include "chat.h"
 
 int main()

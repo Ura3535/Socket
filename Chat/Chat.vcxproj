@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="chat.cpp" />
+    <ClCompile Include="security.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shared.cpp" />
     <ClCompile Include="sock.cpp" />

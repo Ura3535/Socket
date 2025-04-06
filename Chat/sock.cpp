@@ -11,15 +11,14 @@ static const std::string MyIP = "192.168.0.103";
 static const std::string InterlocutorIP = "192.168.0.103";
 static const int DefaultPort = 1029;
 
-static std::wstring getIP(bool isServer) {
-    std::string ip = isServer ? MyIP : InterlocutorIP;
-
-    int size_needed = MultiByteToWideChar(CP_UTF8, 0, ip.c_str(), -1, NULL, 0);
-    std::wstring wip(size_needed, 0);
-    MultiByteToWideChar(CP_UTF8, 0, ip.c_str(), -1, &wip[0], size_needed);
-
+static std::wstring getIP(bool status) {
+    std::string ip = status ? "192.168.0.103" : "192.168.0.103";
+    int bufferSize = MultiByteToWideChar(CP_UTF8, 0, ip.c_str(), -1, NULL, 0);
+    std::wstring wip(bufferSize, 0);
+    MultiByteToWideChar(CP_UTF8, 0, ip.c_str(), -1, &wip[0], bufferSize);
     return wip;
 }
+
 
 static sockaddr_in createService(bool isServer) {
     sockaddr_in service{};
@@ -55,7 +54,7 @@ Socket::Socket(const SOCKET& other)
 Socket::~Socket()
 {
     if (sock != INVALID_SOCKET) {
-        closesocket(sock);
+        //closesocket(sock);
     }
 }
 
@@ -117,7 +116,7 @@ bool ConnectionSocket::ReSock(SOCKET other) {
 }
 
 int ConnectionSocket::Send(const char* buf) const {
-    int result = send(sock, buf, SOCCKET_BUF_SIZE, 0);
+    int result = send(sock, buf, SOCKET_BUF_SIZE, 0);
     if (result == SOCKET_ERROR) {
         std::cerr << "Send failed: " << WSAGetLastError() << "\n";
     }
@@ -125,7 +124,7 @@ int ConnectionSocket::Send(const char* buf) const {
 }
 
 int ConnectionSocket::Recv(char* buf) const {
-    int result = recv(sock, buf, SOCCKET_BUF_SIZE, 0);
+    int result = recv(sock, buf, SOCKET_BUF_SIZE, 0);
     if (result == SOCKET_ERROR) {
         std::cerr << "Recv failed: " << WSAGetLastError() << "\n";
     }

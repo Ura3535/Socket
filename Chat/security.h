@@ -3,41 +3,54 @@
 #include <string>
 #include <sstream>
 
-bool Verify(bool isHost, const std::string& secretKey, const ICommunicator& communicator) {
-	const int t = 5;
-	std::hash<size_t> hash;
-	std::hash<std::string> hashStr;
+template<typename HashFunc>
+bool Verify(bool isHost, const std::string& secretKey, const ICommunicator& communicator, HashFunc hash) {
 	if (isHost) {
-		size_t secret = hashStr(secretKey);
-		for (int i = 1; i != t; ++i)
+		std::string secret = hash(secretKey);
+		for (int i = 1; i != T; ++i)
 			secret = hash(secret);
-		std::string buf;
-		for (int i = 1; i != t; ++i)
+		std::string msg;
+		for (int i = 1; i != T; ++i)
 		{
-			buf = communicator.Recv();
-			log("recv| key: "s + buf);
-			std::istringstream iss(buf);
-			size_t key;
+			msg = communicator.Recv();
+			log("recv| key: "s + msg);
+			std::istringstream iss(msg);
+			std::string key;
 			iss >> key;
 
-			log("verify keys: "s + std::to_string(hash(key)) + " "s + std::to_string(secret));
+			log("verify keys: "s + hash(key) + " "s + secret);
 			if (hash(key) != secret) {
+				communicator.Send("0");
 				return false;
 			}
 			secret = key;
 		}
+
+		communicator.Send("1");
+		return true;
 	}
 	else {
-		size_t hashs[t] = { hashStr(secretKey) };
-		for (int i = 1; i != t; ++i)
-			hashs[i] = hash(hashs[i - 1]);
-		for (int i = t - 2; i >= 0; --i)
+		std::string hashes[T] = { hash(secretKey) };
+		for (int i = 1; i != T; ++i)
+			hashes[i] = hash(hashes[i - 1]);
+		for (int i = T - 2; i >= 0; --i)
 		{
-            std::string key = std::to_string(hashs[i]);
-            communicator.Send(key);
-            log("send| key: "s + key);
+			std::string key = hashes[i];
+			communicator.Send(key);
+			log("send| key: "s + key);
 		}
-	}
 
-	return true;
+		std::string msg = communicator.Recv();
+		return std::stoi(msg) == 1;
+	}
 }
+
+std::string sha256(const std::string& input);
+
+template<typename T>
+class SHA256 {
+public:
+	std::string operator() (T input) const {
+		return sha256(std::to_string(input));
+	}
+};

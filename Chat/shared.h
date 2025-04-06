@@ -7,7 +7,8 @@
 namespace ch = std::chrono;
 using namespace std::string_literals;
 
-const size_t SOCCKET_BUF_SIZE = 21;
+const size_t SOCKET_BUF_SIZE = 21;
+const int T = 5;
 
 void log(const std::string& msg);
 

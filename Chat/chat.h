@@ -28,7 +28,7 @@ private:
 
 struct ChatCommunicator : ICommunicator {
 public:
-	ChatCommunicator(const ConnectionSocket&, bool tryConnect);
+	ChatCommunicator(ConnectionSocket&&, bool tryConnect);
 	void Send(std::string) const override;
 	std::string Recv() const override;
 private:

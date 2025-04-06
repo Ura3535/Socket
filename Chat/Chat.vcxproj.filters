@@ -27,6 +27,9 @@
     <ClCompile Include="sock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="security.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="chat.h">

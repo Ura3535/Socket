@@ -6,6 +6,13 @@
 #include <sstream>
 #include "security.h"
 
+enum class COMMAND
+{
+	EXIT,
+	SEND,
+	UNKNOWN
+};
+
 template <typename EnumType>
 char enumToChar(EnumType e) {
 	return static_cast<int>(e) + '0';
@@ -15,14 +22,6 @@ template <typename EnumType>
 EnumType charToEnum(char c) {
 	return static_cast<EnumType>(c - '0');
 }
-
-enum class COMMAND
-{
-	EXIT,
-	SEND,
-	UNKNOWN
-};
-
 
 static COMMAND commandProcessing(std::string command)
 {
@@ -56,29 +55,29 @@ void Chat::Connect(const std::string& secretKey) {
 		ListenSocket.Bind();
 		ListenSocket.Listen(1);
 
-		std::cout << "Wait for the interlocutor to connect...\n";
-		communicator = new ChatCommunicator(ConnectionSocket(ListenSocket.Accept()), false);
+		std::cout << "Wait for the interlocutor to connect...\n"; 
+		communicator = new ChatCommunicator(std::move(ConnectionSocket(ListenSocket.Accept())), false);
 		std::cout << "The interlocutor has connected\n";
 
 	}
 	else
 	{
-		communicator = new ChatCommunicator(ConnectionSocket(), true);
+		communicator = new ChatCommunicator(std::move(ConnectionSocket()), true);
 	}
 
-	//   bool isVerify = Verify(isHost, secretKey, *communicator);
+	   bool isVerify = Verify(isHost, secretKey, *communicator, sha256);
 
-	   //if (isVerify) {
-	   //	std::cout << "Verify\n";
-	   //}
-	   //else
-	   //{
-	   //	std::cout << "Not verify\n";
-	   //	return;
-	   //}
+	   if (isVerify) {
+	   	std::cout << "Verify\n";
+	   }
+	   else
+	   {
+	   	std::cout << "Not verify\n";
+	   	return;
+	   }
 
 	log("Connect"s);
-	//communicator->Send(Name);
+	communicator->Send(Name);
 	InterlocutorName = communicator->Recv();
 	std::cout << "Connect to " << InterlocutorName << '\n';
 	connection = true;
@@ -87,6 +86,9 @@ void Chat::Connect(const std::string& secretKey) {
 
 void Chat::Start()
 {
+	if (!connection) {
+		return;
+	}
 	clearChat();
 	std::thread RECV([this]() {
 		std::string msg;
@@ -149,9 +151,10 @@ void Chat::print(const std::string& msg, bool who)
 	out.close();
 }
 
+
 //struct Comunicator
-ChatCommunicator::ChatCommunicator(const ConnectionSocket& interlocutor, bool tryConnect)
-	: Interlocutor(interlocutor)
+ChatCommunicator::ChatCommunicator(ConnectionSocket&& interlocutor, bool tryConnect)
+	: Interlocutor(std::move(interlocutor))
 {
 	if(tryConnect)
 		log("try to connect to server: "s + std::to_string(Interlocutor.Connect()));
@@ -159,11 +162,11 @@ ChatCommunicator::ChatCommunicator(const ConnectionSocket& interlocutor, bool tr
 
 void ChatCommunicator::Send(std::string msg) const
 {
-	char buf[SOCCKET_BUF_SIZE];
-	while (msg.size() > SOCCKET_BUF_SIZE - 1) {
+	char buf[SOCKET_BUF_SIZE];
+	while (msg.size() > SOCKET_BUF_SIZE - 1) {
 		msg = enumToChar<HEAD>(HEAD::MESS_PIECE) + msg;
-		buf[msg.copy(buf, SOCCKET_BUF_SIZE - 1, 0)] = '\0';
-		msg.erase(0, SOCCKET_BUF_SIZE - 1);
+		buf[msg.copy(buf, SOCKET_BUF_SIZE - 1, 0)] = '\0';
+		msg.erase(0, SOCKET_BUF_SIZE - 1);
 		Interlocutor.Send(buf);
 		log("send| message (piece): "s + buf);
 	}
@@ -176,10 +179,9 @@ void ChatCommunicator::Send(std::string msg) const
 std::string ChatCommunicator::Recv() const
 {
 	std::string msg = "";
-	char buf[SOCCKET_BUF_SIZE];
+	char buf[SOCKET_BUF_SIZE];
 	while (true) {
-		log("recv| bufsize: "s + std::to_string(Interlocutor.Recv(buf)));
-		log("recv| buf: "s + buf);
+		(Interlocutor.Recv(buf));
 		switch (charToEnum<HEAD>(buf[0]))
 		{
 		case HEAD::EXIT:
